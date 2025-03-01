@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор и отправка данных</title>
+</head>
+<body>
+
+    <button id="fetchButton">Загрузить данные</button>
+    <ul id="resultList"></ul>
+    <button id="sendButton">Отправить выбранные</button>
+
+    <script>
+        async function fetchData() {
+    const url = `http://127.0.0.1:8000/profile/fbs_orders/{{ seller_id }}`;
+    const resultList = document.getElementById('resultList');
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Ошибка при загрузке данных');
+        }
+
+        const data = await response.json();
+        resultList.innerHTML = '';
+
+        data.sellers.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.name + ' ' + item.id + ' ' + item.skus;
+            li.dataset.name = item.name;
+            li.dataset.id = item.id;
+            li.dataset.barcode = item.skus; // Предполагаем, что barcode есть в данных
+            li.addEventListener('click', () => {
+                li.classList.toggle('selected');
+            });
+            resultList.appendChild(li);
+        });
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        resultList.innerHTML = '<li>Ошибка при загрузке данных</li>';
+    }
+}
+
+async function sendSelectedItems() {
+    const selectedItems = Array.from(document.querySelectorAll('.selected'));
+    const selectedData = selectedItems.map(item => ({
+        id: item.dataset.id,
+        barcode: item.dataset.barcode, // Добавляем barcode
+        name: item.dataset.name
+    }));
+
+    // if (selectedData.length === 0) {
+    //     alert("Выберите хотя бы один элемент!");
+    //     return;
+    // }
+
+    const url = `http://127.0.0.1:8000/profile/get_id_orders/`;
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ 
+                sid : "{{ seller_id }}",
+                items: selectedData 
+            }) // Отправляем массив объектов {id, barcode}
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при отправке данных');
+        }
+
+        // Получаем ответ как Blob (бинарные данные)
+        const blob = await response.blob();
+
+        // Создаем ссылку для скачивания
+        const urlBlob = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = urlBlob;
+        a.download = "document.pdf"; // Имя файла
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(urlBlob);
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert("Ошибка при отправке данных");
+    }
+}
+
+document.getElementById('fetchButton').addEventListener('click', fetchData);
+document.getElementById('sendButton').addEventListener('click', sendSelectedItems);
+    </script>
+
+    <style>
+        .selected {
+            background-color: lightblue;
+            cursor: pointer;
+        }
+        li {
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #ccc;
+            margin: 2px;
+        }
+    </style>
+
+</body>
+</html>

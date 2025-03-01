@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Информация о пользователе</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #user-info {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Данные пользователя</h1>
+
+    <!-- Форма для ввода токена -->
+    <form id="token-form">
+        <label for="token">Введите токен:</label>
+        <input type="text" id="token" name="token" required>
+        <button type="submit">Отправить</button>
+    </form>
+    <ul id="sellers-list"></ul>
+    <!-- <div id="user-info">Загрузка...</div> -->
+
+    <script>
+        async function fetchAuthInfo() {
+            const userInfoDiv = document.getElementById('user-info');
+            fetch('http://127.0.0.1:8000/auth/info/')
+            .then(response => response.json())
+            .then(data => {
+                let productList = document.getElementById('product-list');
+                data.products.forEach(product => {
+                    let li = document.createElement('li');
+                    li.textContent = `${product.name} — ${product.trademark}`;
+                    productList.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Ошибка загрузки данных:', error));
+            try {
+                const response = await fetch('http://127.0.0.1:8000/auth/info/', {
+                    method: 'GET',
+                    credentials: 'include' // Передаём куки с запросом
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json(); // Парсим JSON-ответ
+                
+                // Формируем строку с информацией
+                userInfoDiv.innerHTML = `
+                    <p><strong>ID:</strong> ${data.id}</p>
+                    <p><strong>Имя:</strong> ${data.name}</p>
+                    <p><strong>Email:</strong> ${data.email}</p>
+                `;
+            } catch (error) {
+                console.error('Ошибка при запросе:', error);
+                userInfoDiv.innerHTML = `<p style="color: red;">Не удалось загрузить данные</p>`;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            async function fetchSellers() {
+                try {
+                    let response = await fetch('http://127.0.0.1:8000/auth/info/');
+                    let data = await response.json();
+
+                    let list = document.getElementById('sellers-list');
+                    if (!list) {
+                        console.error("Ошибка: Элемент #sellers-list не найден");
+                        return;
+                    }
+
+                    list.innerHTML = ""; // Очищаем список перед добавлением новых данных
+
+                    data.sellers.forEach(seller => {
+                        let li = document.createElement('li');
+                        let a = document.createElement('a');
+
+                        a.textContent = `${seller.name} — ${seller.trademark}`;
+                        a.href = `/profile/seller/${seller.id}`;  // Подставь нужный URL-шаблон
+                        // a.target = "_blank";  // Открывать в новой вкладке (по желанию)
+
+                        li.appendChild(a);
+                        list.appendChild(li);
+                    });
+                } catch (error) {
+                    console.error("Ошибка загрузки данных:", error);
+                }
+            }
+
+            fetchSellers(); // Вызываем функцию только после загрузки DOM
+        });
+
+        async function submitToken(event) {
+            event.preventDefault(); // Предотвращаем перезагрузку страницы
+
+            const tokenInput = document.getElementById('token').value;
+
+            if (!tokenInput) {
+                alert("Введите токен!");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/auth/addNewSeller/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: tokenInput }),
+                    credentials: 'include' // Чтобы куки передавались с запросами
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+                }
+
+                alert("Токен сохранён! Загружаем данные...");
+                fetchAuthInfo(); // Загружаем данные после установки токена
+            } catch (error) {
+                console.error('Ошибка при отправке токена:', error);
+                alert("Не удалось сохранить токен!");
+            }
+            
+        }
+        
+        document.getElementById('token-form').addEventListener('submit', submitToken);
+
+        // Запускаем запрос при загрузке страницы
+        // window.onload = fetchAuthInfo;
+    </script>
+
+</body>
+</html>
