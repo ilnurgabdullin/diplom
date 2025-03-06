@@ -81,7 +81,7 @@
 
         <button type="submit">Регистрация</button>
     </form>
-    <a href="http://127.0.0.1:8000/auth/authpage/" class="button">Авторизация</a>
+    <a href="/auth/authpage/" class="button">Авторизация</a>
     <div class="error-message" id="error-message"></div>
 </div>
 
@@ -101,7 +101,7 @@
 
         try {
             // Отправляем запрос на сервер
-            const response = await fetch('http://127.0.0.1:8000/auth/register/', {
+            const response = await fetch('/auth/register/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -114,7 +114,7 @@
 
             // Если авторизация прошла успешно, то получим токены
             if (response.ok) {
-                window.location.href = 'http://127.0.0.1:8000/auth/authpage/'; // или любой другой путь
+                window.location.href = '/auth/authpage/'; // или любой другой путь
             } else {
                 const errorData = await response.json();
                 errorMessage.textContent = errorData.detail || 'Ошибка авторизации';

@@ -37,7 +37,7 @@
     <script>
         async function fetchAuthInfo() {
             const userInfoDiv = document.getElementById('user-info');
-            fetch('http://127.0.0.1:8000/auth/info/')
+            fetch('/auth/info/')
             .then(response => response.json())
             .then(data => {
                 let productList = document.getElementById('product-list');
@@ -49,7 +49,7 @@
             })
             .catch(error => console.error('Ошибка загрузки данных:', error));
             try {
-                const response = await fetch('http://127.0.0.1:8000/auth/info/', {
+                const response = await fetch('/auth/info/', {
                     method: 'GET',
                     credentials: 'include' // Передаём куки с запросом
                 });
@@ -75,7 +75,7 @@
         document.addEventListener("DOMContentLoaded", function() {
             async function fetchSellers() {
                 try {
-                    let response = await fetch('http://127.0.0.1:8000/auth/info/');
+                    let response = await fetch('/auth/info/');
                     let data = await response.json();
 
                     let list = document.getElementById('sellers-list');
@@ -116,7 +116,7 @@
             }
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/auth/addNewSeller/', {
+                const response = await fetch('/auth/addNewSeller/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

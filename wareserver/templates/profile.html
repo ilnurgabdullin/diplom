@@ -14,7 +14,7 @@
     <script>
 
         async function fetchData() {
-    const url = `http://127.0.0.1:8000/profile/fbs_orders/{{ seller_id }}`;
+    const url = `/profile/fbs_orders/{{ seller_id }}`;
     const resultList = document.getElementById('resultList');
 
     try {
@@ -57,7 +57,7 @@ async function sendSelectedItems() {
          return;
      }
 
-    const url = `http://127.0.0.1:8000/profile/get_id_orders/`;
+    const url = `/profile/get_id_orders/`;
     try {
         const response = await fetch(url, {
             method: "POST",
