@@ -8,14 +8,14 @@ from rest_framework.response import Response
 from sellersinfo.models import Sellers, Cards, InfoModel, Warehouse
 # from accounts.models import CustomUser
 # from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 # from rest_framework import status
 from datetime import timedelta
-from django.conf import settings
+# from django.conf import settings
 from django.shortcuts import render
 from wareserver.authentication import CookieJWTAuthentication
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, authentication_classes
 from accounts.baseapi import getSimple, getStiker, getFBSorders, createPostavks, addOrderInPostavk, getPSTStiker, addPst2Del
 from accounts.barcodes import create
 # from .models import Sellers
@@ -63,7 +63,7 @@ def send_stikers(request):
         barcs = []
         pst = createPostavks(slr.api_token, data['items'][0]['name'] + ' ' + str(date.today()))['id']
         # pst ='WB-GI-142092778'
-        sleep(0.5)
+        sleep(1)
         for i in data['items']:
             addOrderInPostavk(slr.api_token,pst,i['id'])
             stiks.append(int(i['id']))
@@ -73,14 +73,14 @@ def send_stikers(request):
         # stiks = [3052787217]
         stkr = getStiker(slr.api_token,stiks)
         stiks = []
-        sleep(2)
+        sleep(3)
         for i in stkr:
             stiks.append(i['file'])
         # print(pst_code.keys()) # pst_stiker= pst_code['file']
         # sleep(1)
-        ln = getSimple(slr.api_token, 'https://marketplace-api.wildberries.ru/api/v3/supplies/{pst}/orders')['orders']
-        while ln < len(stkr):
-            ln = getSimple(slr.api_token, 'https://marketplace-api.wildberries.ru/api/v3/supplies/{pst}/orders')['orders']
+        # ln = getSimple(slr.api_token, 'https://marketplace-api.wildberries.ru/api/v3/supplies/{pst}/orders')['orders']
+        # while ln < len(stkr):
+        #     ln = getSimple(slr.api_token, 'https://marketplace-api.wildberries.ru/api/v3/supplies/{pst}/orders')['orders']
 
         addPst2Del(slr.api_token, pst)
         sleep(3)

@@ -116,14 +116,15 @@
             });
 
             // Если регистрация прошла успешно, перенаправляем на страницу авторизации
-            if (response.ok) {
+            // alert(response.status);
+            if (response.status == 200) {
                 window.location.href = 'http://127.0.0.1:8000/auth/authpage/';
             } else {
                 const errorData = await response.json();
                 errorMessage.textContent = errorData.detail || 'Ошибка регистрации';
             }
         } catch (error) {
-            errorMessage.textContent = 'Произошла ошибка при отправке запроса';
+            errorMessage.textContent = 'Произошла ошибка при отправке запроса или такой пользователь уже есть';
         }
     });
 

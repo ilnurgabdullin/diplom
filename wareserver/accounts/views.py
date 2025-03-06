@@ -1,11 +1,11 @@
 from django.shortcuts import render
-from rest_framework import generics, permissions
+# from rest_framework import generics, permissions
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+# from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserRegistrationSerializer, MyTokenObtainPairSerializer
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from sellersinfo.models import Sellers, Cards, InfoModel, Warehouse
 from accounts.models import CustomUser
@@ -16,9 +16,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import MyTokenObtainPairSerializer
 from datetime import timedelta
-from django.conf import settings
+# from django.conf import settings
 from wareserver.authentication import CookieJWTAuthentication
-
+import os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 @api_view(['GET'])
 @authentication_classes([CookieJWTAuthentication])
@@ -32,6 +34,28 @@ def my_custom_view(request):
     sls = [{'name': i.name, 'trademark': i.trademark, 'id' : i.id} for i in sellers]
     return Response({'sellers': sls}, status=200)
 
+
+
+@api_view(['POST'])
+@authentication_classes([CookieJWTAuthentication])
+def upload_pdf(request):
+    pdf_file = request.FILES['pdf_file']
+
+        # Проверяем, что файл является PDF
+    if not pdf_file.name.endswith('.pdf'):
+        return HttpResponse('Ошибка: разрешены только PDF-файлы.', status=400)
+
+        # Генерируем уникальное имя для файла
+    # unique_name = f"{uuid.uuid4().hex}.pdf"
+    file_path = os.path.join('pdfs', pdf_file.name)
+
+        # Сохраняем файл в папку media/pdfs/
+    default_storage.save(file_path, ContentFile(pdf_file.read()))
+
+        # Если используется модель, сохраняем информацию в базу данных
+        # PDFFile.objects.create(file=file_path)
+
+    return HttpResponse('Файл успешно загружен!')
 
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])

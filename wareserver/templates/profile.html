@@ -12,6 +12,7 @@
     <button id="sendButton">Отправить выбранные</button>
 
     <script>
+
         async function fetchData() {
     const url = `http://127.0.0.1:8000/profile/fbs_orders/{{ seller_id }}`;
     const resultList = document.getElementById('resultList');
@@ -51,10 +52,10 @@ async function sendSelectedItems() {
         name: item.dataset.name
     }));
 
-    // if (selectedData.length === 0) {
-    //     alert("Выберите хотя бы один элемент!");
-    //     return;
-    // }
+     if (selectedData.length === 0) {
+         alert("Выберите хотя бы один элемент!");
+         return;
+     }
 
     const url = `http://127.0.0.1:8000/profile/get_id_orders/`;
     try {
@@ -94,6 +95,11 @@ async function sendSelectedItems() {
 
 document.getElementById('fetchButton').addEventListener('click', fetchData);
 document.getElementById('sendButton').addEventListener('click', sendSelectedItems);
+    try {
+        fetchData();
+    } catch {
+        ;
+    }
     </script>
 
     <style>

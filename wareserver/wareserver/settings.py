@@ -24,11 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*0da#ok^en8kptn!a$q2)0+b-f)es8(($je^d4zwf^l=%4jpt$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
-
+MEDIA_ROOT = os.path.join(BASE_DIR, 'pdfs')
 # Application definition
 
 INSTALLED_APPS = [

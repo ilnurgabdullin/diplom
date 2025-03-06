@@ -1,6 +1,6 @@
 import requests
 import json
-from pprint import pprint
+# from pprint import pprint
 try:
     from barcodes import create
 except:
