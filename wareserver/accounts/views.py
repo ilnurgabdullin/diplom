@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from sellersinfo.models import Sellers, Cards, InfoModel, Warehouse
 from accounts.models import CustomUser
-from .baseapi import getUserInfo, getCardInfo, getSimple
+from .baseapi import getUserInfo, getCardInfo, getSimple, splitPdf
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -21,6 +21,7 @@ from wareserver.authentication import CookieJWTAuthentication
 import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.http import JsonResponse
 
 @api_view(['GET'])
 @authentication_classes([CookieJWTAuthentication])
@@ -126,6 +127,31 @@ def user_registration_view(request):
         return Response(serializer.errors, status=status.HTTP_205_RESET_CONTENT)
 
 
+@api_view(['POST'])
+@authentication_classes([CookieJWTAuthentication])
+def newFile(request):
+    
+        # Проверяем, есть ли файл в запросе
+    if 'myfile' not in request.FILES:
+        return JsonResponse({'error': 'Файл не найден в запросе'}, status=400)
+
+    uploaded_file = request.FILES['myfile']  # Получаем файл
+
+        # Проверяем, что файл имеет расширение .pdf
+    if not uploaded_file.name.endswith('.pdf'):
+        return JsonResponse({'error': 'Файл должен быть в формате PDF'}, status=400)
+
+    file_path = os.path.join('pdfs', uploaded_file.name)
+    with open(file_path, 'wb+') as destination:
+        for chunk in uploaded_file.chunks():
+            destination.write(chunk)
+    names=splitPdf(file_path)
+    try:
+        os.remove(file_path)
+    except:
+        pass
+    return JsonResponse({'message': 'Файл успешно загружен', 'file_path': names})
+    
 
 
 @api_view(['POST'])

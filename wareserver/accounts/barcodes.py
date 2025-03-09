@@ -96,3 +96,50 @@ def create(base64_list, output_pdf="output.pdf", pst_stiker=None, insert_pdf_lis
         writer.write(out_file)
     
     print(f"PDF создан: {output_pdf}")
+
+
+# import PyPDF2
+import re
+
+def split_pdf_by_barcode(input_pdf_path):
+    # Открываем исходный PDF-файл
+    with open(input_pdf_path, 'rb') as file:
+        reader = PdfReader(file)
+        names = []
+        # Обрабатываем каждую страницу
+        for page_num in range(len(reader.pages)):
+            page = reader.pages[page_num]
+            
+            # Извлекаем текст из страницы
+            text = page.extract_text()
+            if not text:
+                print(f"Страница {page_num + 1}: текст не найден. Пропуск.")
+                continue
+            
+            # Ищем штрих-код (первая строка, содержащая только цифры)
+            lines = text.split('\n')
+            barcode = None
+            for line in lines:
+                line = line.strip()
+                if re.match(r'^\d+$', line):  # Проверяем, что строка состоит только из цифр
+                    barcode = line
+                    break
+            
+            if not barcode:
+                print(f"Страница {page_num + 1}: штрих-код не найден. Пропуск.")
+                continue
+            
+            # Создаем новый PDF-файл для страницы
+            writer = PdfWriter()
+            writer.add_page(page)
+            
+            # Сохраняем файл
+            output_filename = pdf_path = os.path.join("pdfs", f"{barcode}.pdf")
+            with open(output_filename, 'wb') as output_file:
+                writer.write(output_file)
+            names.append(f"Страница {page_num + 1} сохранена как {output_filename}")
+        
+    return names
+
+# Пример использования
+# split_pdf_by_barcode("леопард.pdf")

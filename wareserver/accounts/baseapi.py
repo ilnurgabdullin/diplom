@@ -2,12 +2,14 @@ import requests
 import json
 # from pprint import pprint
 try:
-    from barcodes import create
+    from barcodes import create, split_pdf_by_barcode
 except:
-    from .barcodes import create
+    from .barcodes import create, split_pdf_by_barcode
 
 # from ..sellersinfo.models import Warehouse
 
+def splitPdf(file_name : str):
+    return split_pdf_by_barcode(file_name)
 
 def getUserInfo(token : str):
     url = 'https://common-api.wildberries.ru/api/v1/seller-info'
@@ -114,7 +116,7 @@ def getFBSorders(token : str):
     response = requests.get(url,headers=headers)
 
     if response.status_code == 200:
-        print(response.text)
+        # print(response.text)
 
         return response.json()  # Если ответ в формате JSON
     else:
