@@ -57,6 +57,8 @@ def upload_pdf(request):
 
     return HttpResponse('Файл успешно загружен!')
 
+
+
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
 def addNewSeller(request):
@@ -70,15 +72,20 @@ def addNewSeller(request):
     except:
         pass
 
-    # Проверяем, есть ли уже продавец с таким api_token
+    # Ищем продавца по sid
     seller, created = Sellers.objects.get_or_create(
-        api_token=token,  # Теперь проверяем по api_token
+        sid=dt['sid'],  # Проверяем по sid
         defaults={
-            'sid': dt['sid'],  # sid теперь будет заполняться только при создании нового продавца
             'name': dt['name'],
-            'trademark': dt.get('tradeMark', '')
+            'trademark': dt.get('tradeMark', ''),
+            'api_token': token
         }
     )
+
+    # Если запись уже существует, обновляем токен
+    if not created:
+        seller.api_token = token
+        seller.save()
 
     # Проверяем, есть ли уже запись в InfoModel для этого пользователя и продавца
     user = request.user  # Получаем пользователя из запроса
@@ -88,28 +95,6 @@ def addNewSeller(request):
         # Если связки пользователя с продавцом нет — создаем
         InfoModel.objects.create(userId=user, sellerId=seller)
 
-    # Если продавец новый — загружаем карточки
-    # if created:
-    #     cards_data = getCardInfo(token)
-    #     cards_to_create = [
-    #         Cards(
-    #             seller=seller,
-    #             nmid=cr['nmid'],
-    #             imtid=cr['imtid'],
-    #             nmuuid=cr['nmuuid'],
-    #             subjectid=cr['subjectid'],
-    #             subjectname=cr['subjectname'],
-    #             vendorcode=cr['vendorcode'],
-    #             brand=cr['brand'],
-    #             title=cr['title'],
-    #             description=cr['description'],
-    #             needkiz=cr['needkiz'],
-    #             createdat=cr['createdat'],
-    #             updatedat=cr['updatedat'],
-    #         )
-    #         for cr in cards_data
-    #     ]
-    #     Cards.objects.bulk_create(cards_to_create)  # Создаём все карточки одним запросом
 
     return Response({'response': 'Продавец добавлен или уже существует'})
 
