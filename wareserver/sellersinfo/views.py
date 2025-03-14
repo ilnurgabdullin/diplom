@@ -31,6 +31,15 @@ def user_inform(request):
     return render(request, 'mainProfile.html')
 
 
+
+@api_view(['GET'])
+@authentication_classes([CookieJWTAuthentication])
+# @permission_classes([IsAuthenticated])
+def myProfile(request):
+    # Твоя логика здесь
+    return render(request, 'userProfile.html')
+
+
 @api_view(['GET'])
 @authentication_classes([CookieJWTAuthentication])
 def seller_profile(request, seller_id):
@@ -47,9 +56,13 @@ def fbs_orders(request, seller_id):
     # print(Warehouse.objects.get())
 
     ors = getFBSorders(sellers.api_token)['orders'] #,'https://marketplace-api.wildberries.ru/api/v3/orders/new')['orders']
-    sls = [{'id':i['id'], 'name':Warehouse.objects.get(location_id=i['warehouseId']).name, 'skus':i['skus'][0]} for i in ors]
+    sls = [{'id':i['id'], 'name':Warehouse.objects.get(location_id=i['warehouseId']).name, 'skus':i['skus']} for i in ors]
+    # from pprint import pprint
+    # for i in ors:
+    #     pprint(i)
     # print(sellers.name)
     return Response({'sellers': sls}, status=200)
+
 
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
@@ -83,7 +96,7 @@ def send_stikers(request):
         #     ln = getSimple(slr.api_token, 'https://marketplace-api.wildberries.ru/api/v3/supplies/{pst}/orders')['orders']
 
         addPst2Del(slr.api_token, pst)
-        sleep(3)
+        sleep(15)
         pst_code = getPSTStiker(slr.api_token, pst)
         # print(stiks,barcs)
         # barcs = ['2039773628195']

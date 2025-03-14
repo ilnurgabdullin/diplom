@@ -2,7 +2,7 @@ import requests
 import json
 # from pprint import pprint
 try:
-    from barcodes import create, split_pdf_by_barcode
+    from accounts.barcodes import create, split_pdf_by_barcode
 except:
     from .barcodes import create, split_pdf_by_barcode
 

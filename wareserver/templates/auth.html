@@ -117,8 +117,9 @@
 
             // Если регистрация прошла успешно, перенаправляем на страницу авторизации
             // alert(response.status);
-            if (response.status == 200) {
-                window.location.href = '/auth/authpage/';
+            if (response.status == 201) {
+                alert('Теперь можете авторизоваться')
+                window.location.href = '/';
             } else {
                 const errorData = await response.json();
                 errorMessage.textContent = errorData.detail || 'Ошибка регистрации';

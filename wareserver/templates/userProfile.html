@@ -1,0 +1,94 @@
+
+{% extends "base.html" %}
+    
+{% block title %}Профиль{% endblock title %}
+
+{% block header %}
+    <div>Информация о пользователе</div>
+{% endblock header %}
+
+{% block content%}
+    <form id="token-form">
+        <label for="token">Введите токен:</label>
+        <input type="text" id="token" name="token" required>
+        <button type="submit">Отправить</button>
+    </form>
+    <p><br><br></p>
+    <form id="file-send" method="POST">
+        <input type="file" id="myfile" name="myfile" />
+        <button type="submit">Отправить</button>
+    </form>
+{% endblock content%}
+
+
+{% block script %}
+    <script>
+        async function sendFile(event) {
+        event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+        // Получаем файл из input
+        const fileInput = document.getElementById('myfile');
+        const file = fileInput.files[0];
+
+        // Проверяем, что файл был выбран
+        if (!file) {
+            alert('Пожалуйста, выберите файл.');
+            return;
+        }
+
+        // Создаем объект FormData и добавляем файл
+        const formData = new FormData();
+        formData.append('myfile', file);
+
+        try {
+            const response = await fetch('/auth/newFile/', { // Замените '/upload' на ваш URL
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+
+            const result = await response.json(); // Предполагаем, что сервер возвращает JSON
+            alert(result);
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    }
+
+    document.getElementById('file-send').addEventListener('submit', sendFile);
+        
+        async function submitToken(event) {
+            event.preventDefault();
+
+            const tokenInput = document.getElementById('token').value;
+
+            if (!tokenInput) {
+                alert("Введите токен!");
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/addNewSeller/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: tokenInput }),
+                    credentials: 'include' 
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+                }
+
+                alert("Токен сохранён! Загружаем данные...");
+                fetchAuthInfo();
+            } catch (error) {
+                console.error('Ошибка при отправке токена:', error);
+                alert("Не удалось сохранить токен!");
+            }
+            
+        }
+
+        document.getElementById('token-form').addEventListener('submit', submitToken);
+    </script>
+{% endblock script %}

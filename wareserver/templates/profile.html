@@ -1,19 +1,43 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Выбор и отправка данных</title>
-</head>
-<body>
+{% extends "base.html" %}
+<!-- title -->
+{% block title %}Выбор сборочных заданий{% endblock title %}
 
-    <button id="fetchButton">Загрузить данные</button>
-    <ul id="resultList"></ul>
-    <button id="sendButton">Отправить выбранные</button>
 
-    <script>
+<!-- style -->
+{% block style %}
+<style>
+    .selected {
+        background-color: lightblue;
+        cursor: pointer;
+    }
+    .elem {
+        cursor: pointer;
+        padding: 5px;
+        border: 1px solid #ccc;
+        margin: 2px;
+    }
+</style>
+{% endblock style %}
 
-        async function fetchData() {
+
+<!-- header -->
+{% block header %}
+     
+{% endblock header %}
+
+
+<!-- content -->
+{% block content%}
+<button id="fetchButton">Загрузить данные</button>
+<ul id="resultList"></ul>
+<button id="sendButton">Отправить выбранные</button>
+{% endblock content %}
+
+
+<!-- script -->
+{% block script %}
+<script>
+    async function fetchData() {
     const url = `/profile/fbs_orders/{{ seller_id }}`;
     const resultList = document.getElementById('resultList');
 
@@ -31,6 +55,7 @@
             li.textContent = item.name + ' ' + item.id + ' ' + item.skus;
             li.dataset.name = item.name;
             li.dataset.id = item.id;
+            li.classList.toggle('elem');
             li.dataset.barcode = item.skus; // Предполагаем, что barcode есть в данных
             li.addEventListener('click', () => {
                 li.classList.toggle('selected');
@@ -100,20 +125,7 @@ document.getElementById('sendButton').addEventListener('click', sendSelectedItem
     } catch {
         ;
     }
-    </script>
 
-    <style>
-        .selected {
-            background-color: lightblue;
-            cursor: pointer;
-        }
-        li {
-            cursor: pointer;
-            padding: 5px;
-            border: 1px solid #ccc;
-            margin: 2px;
-        }
-    </style>
+</script>
+{% endblock script %}
 
-</body>
-</html>

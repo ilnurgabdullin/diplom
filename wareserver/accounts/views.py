@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from sellersinfo.models import Sellers, Cards, InfoModel, Warehouse
 from accounts.models import CustomUser
-from .baseapi import getUserInfo, getCardInfo, getSimple, splitPdf
+from .baseapi import getUserInfo, getSimple, splitPdf
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -34,7 +34,6 @@ def my_custom_view(request):
     sellers = Sellers.objects.filter(info__userId=user)  # Получаем всех связанных продавцов
     sls = [{'name': i.name, 'trademark': i.trademark, 'id' : i.id} for i in sellers]
     return Response({'sellers': sls}, status=200)
-
 
 
 @api_view(['POST'])
@@ -70,13 +69,14 @@ def addNewSeller(request):
         updateWarehouses(token)
     except:
         pass
-    # Проверяем, есть ли уже продавец с таким sid
+
+    # Проверяем, есть ли уже продавец с таким api_token
     seller, created = Sellers.objects.get_or_create(
-        sid=dt['sid'],
+        api_token=token,  # Теперь проверяем по api_token
         defaults={
+            'sid': dt['sid'],  # sid теперь будет заполняться только при создании нового продавца
             'name': dt['name'],
-            'trademark': dt.get('tradeMark', ''),
-            'api_token': token
+            'trademark': dt.get('tradeMark', '')
         }
     )
 
@@ -89,27 +89,27 @@ def addNewSeller(request):
         InfoModel.objects.create(userId=user, sellerId=seller)
 
     # Если продавец новый — загружаем карточки
-    if created:
-        cards_data = getCardInfo(token)
-        cards_to_create = [
-            Cards(
-                seller=seller,
-                nmid=cr['nmid'],
-                imtid=cr['imtid'],
-                nmuuid=cr['nmuuid'],
-                subjectid=cr['subjectid'],
-                subjectname=cr['subjectname'],
-                vendorcode=cr['vendorcode'],
-                brand=cr['brand'],
-                title=cr['title'],
-                description=cr['description'],
-                needkiz=cr['needkiz'],
-                createdat=cr['createdat'],
-                updatedat=cr['updatedat'],
-            )
-            for cr in cards_data
-        ]
-        Cards.objects.bulk_create(cards_to_create)  # Создаём все карточки одним запросом
+    # if created:
+    #     cards_data = getCardInfo(token)
+    #     cards_to_create = [
+    #         Cards(
+    #             seller=seller,
+    #             nmid=cr['nmid'],
+    #             imtid=cr['imtid'],
+    #             nmuuid=cr['nmuuid'],
+    #             subjectid=cr['subjectid'],
+    #             subjectname=cr['subjectname'],
+    #             vendorcode=cr['vendorcode'],
+    #             brand=cr['brand'],
+    #             title=cr['title'],
+    #             description=cr['description'],
+    #             needkiz=cr['needkiz'],
+    #             createdat=cr['createdat'],
+    #             updatedat=cr['updatedat'],
+    #         )
+    #         for cr in cards_data
+    #     ]
+    #     Cards.objects.bulk_create(cards_to_create)  # Создаём все карточки одним запросом
 
     return Response({'response': 'Продавец добавлен или уже существует'})
 
