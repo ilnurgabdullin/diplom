@@ -1,6 +1,6 @@
 import requests
 import json
-# from pprint import pprint
+from pprint import pprint
 try:
     from accounts.barcodes import create, split_pdf_by_barcode
 except:
@@ -44,37 +44,44 @@ def getSimple(token : str, url : str, params =  {}):
         return response.json()
 
 
-def getPstInfo(token : str):
+def getPstInfo(token: str):
     result = []
     url = 'https://marketplace-api.wildberries.ru/api/v3/supplies'
     repeadParse = True
 
-
-    # Заголовки (если нужны)
+    # Заголовки
     headers = {
-        'Content-Type': 'application/json',  # Указываем, что отправляем JSON
-        'Authorization': token # Если нужна авторизация
+        'Authorization': token  # Если нужна авторизация
     }
 
-    while repeadParse:
-    # Отправка POST-запроса
-        payload = {
-            "limit":100,
-            "next": 0
-        }
-        response = requests.post(url, data=json.dumps(payload), headers=headers)
+    next_value = 0  # Начинаем с 0, как указано в документации
 
-        for oneCard in response.json()['supplies']:
-            # print(oneCard.keys())
-            result.append(
-            oneCard
-            )
+    while repeadParse:
         payload = {
-            'next': response.json()['next'],
-            'limit':100
-            }
-        
-        if len(response.json()['supplies']) < 0:
+            "limit": 1000,  # Максимальное значение, согласно документации
+            "next": next_value
+        }
+
+        # Используем params для GET-запроса
+        response = requests.get(url, params=payload, headers=headers)
+
+        # Проверяем статус ответа
+        if response.status_code != 200:
+            print(f"Ошибка: {response.status_code}, {response.text}")
+            break
+
+        data = response.json()
+
+        # Добавляем данные в результат
+        for oneCard in data['supplies']:
+            if not oneCard['done']:
+                result.append(oneCard)
+
+        # Обновляем значение next для следующего запроса
+        next_value = data.get('next', 0)
+
+        # Проверяем, есть ли еще данные
+        if len(data['supplies']) == 0:
             repeadParse = False
 
     return result
@@ -242,4 +249,9 @@ def wb_con():
 
 
 if __name__ == "__main__":
+    tk1 = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwMjE3djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc1NzczNDU3NCwiaWQiOiIwMTk1OTU0Yy04NDYzLTcxMWQtYWZmNS1jMTJiZGQwNjZhOWIiLCJpaWQiOjkyNjQ4MjMxLCJvaWQiOjExMTYwOTMsInMiOjI2LCJzaWQiOiJmZjRjNTRmYi03NDQ2LTQ1N2UtOWE4Ni05NTA2YmUyOTRmZmYiLCJ0IjpmYWxzZSwidWlkIjo5MjY0ODIzMX0.PPDf0VttnxH6qNBNhecyX5rdHzdqjr9jFchjfd7T6cbM-ArmvMsNskXauOQkwwVgXN8CoBsI751wN6a1CONFZQ'
+    tk2 = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwMjE3djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc1Nzc0MzQ1NiwiaWQiOiIwMTk1OTVkNC0wYTEwLTcxZTUtOGIzNi1hMGRmYzhkMDU2YzMiLCJpaWQiOjkzMjA5MjE2LCJvaWQiOjEzOTgwMjAsInMiOjI2LCJzaWQiOiJmOTlkYjlmYi1lY2JjLTRkZDQtOWQ0Mi1hYjIyOGU1NzQ1OTUiLCJ0IjpmYWxzZSwidWlkIjo5MzIwOTIxNn0.ZI5hjmG4olsdTxhevqAXMSej9ooMCCnzJPrQeIvkBhNSgV6fjl1g2xeryIhr_PN1YZFMrCYjdPgeF6kq6dv5yA'
+    tk3 = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwMjE3djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc1NzczMzI5MCwiaWQiOiIwMTk1OTUzOC1lZGM0LTc1YjEtYTZiZi1iN2NhYzljMmFlMWMiLCJpaWQiOjg2NTA0NTA2LCJvaWQiOjg1ODE2NiwicyI6MjYsInNpZCI6IjVmNjczMmFlLTdmNzEtNDNlMi04ZTIxLWRjN2E2ZWM4YzBkNyIsInQiOmZhbHNlLCJ1aWQiOjg2NTA0NTA2fQ.cmNJuGcDZtpJwVMxkHvHXtrDnj43Sf3-ejKhOypZQVmnyKWbiwN9Hk2xEU1ZEeGFUx5IbajFdU-WmjE3zdlEug'
+    tk4 = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwMTIwdjEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc1Mzk5Njg4MSwiaWQiOiIwMTk0YjY4My1kNzY2LTdiY2UtOTM3Mi05MmUyODY3OWQzMmIiLCJpaWQiOjkwNDEyNTAxLCJvaWQiOjEwNTY4MjYsInMiOjI2LCJzaWQiOiI3N2EzODBhOC04MTEwLTQ2YjEtOGI1Ni01OWE3MmQyNDNhODUiLCJ0IjpmYWxzZSwidWlkIjo5MDQxMjUwMX0.Zj9bjLv4NGSGhZBi6MeUw45vnMrP8PUdnfvSnNGS4A5EZXAtJxJBiVLeTJPG9HB_F2f2PDWRnSKILfr_XyUqFw'
     pass
+    print(getPstInfo(tk2))

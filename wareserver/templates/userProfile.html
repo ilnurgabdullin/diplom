@@ -18,6 +18,11 @@
         <input type="file" id="myfile" name="myfile" />
         <button type="submit">Отправить</button>
     </form>
+    <form id="warehouse">
+        <label for="name">Добавить склад:</label>
+        <input type="text" id="name" name="name" required>
+        <button type="submit">Отправить</button>
+    </form>
 {% endblock content%}
 
 
@@ -90,5 +95,26 @@
         }
 
         document.getElementById('token-form').addEventListener('submit', submitToken);
+
+        async function submitWarehouse(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('name').value;
+            
+            try {
+                const response = await fetch('/profile/create_warehouse/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: nameInput }),
+                    credentials: 'include' 
+                });
+                document.getElementById('name').value = '';
+            } catch (error) {
+                console.log(error)
+            }
+            
+        }
+    document.getElementById('warehouse').addEventListener('submit', submitWarehouse);
     </script>
 {% endblock script %}

@@ -31,43 +31,6 @@
 
 {% block script %}
     <script>
-        async function fetchAuthInfo() {
-            const userInfoDiv = document.getElementById('user-info');
-            fetch('/auth/info/')
-            .then(response => response.json())
-            .then(data => {
-                let productList = document.getElementById('product-list');
-                data.products.forEach(product => {
-                    let li = document.createElement('li');
-                    li.textContent = `${product.name} — ${product.trademark}`;
-                    productList.appendChild(li);
-                });
-            })
-            .catch(error => console.error('Ошибка загрузки данных:', error));
-            try {
-                const response = await fetch('/auth/info/', {
-                    method: 'GET',
-                    credentials: 'include' 
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                
-              
-                userInfoDiv.innerHTML = `
-                    <p><strong>ID:</strong> ${data.id}</p>
-                    <p><strong>Имя:</strong> ${data.name}</p>
-                    <p><strong>Email:</strong> ${data.email}</p>
-                `;
-            } catch (error) {
-                console.error('Ошибка при запросе:', error);
-                userInfoDiv.innerHTML = `<p style="color: red;">Не удалось загрузить данные</p>`;
-            }
-        }
-
         document.addEventListener("DOMContentLoaded", function() {
             async function fetchSellers() {
                 try {

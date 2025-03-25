@@ -1,15 +1,16 @@
 import requests
 import json
-# from pprint import pprint
+from pprint import pprint
 try:
-    from barcodes import create, split_pdf_by_barcode
+    from barcodes import create, split_pdf_by_barcode, generate_pdf
 except:
-    from .barcodes import create, split_pdf_by_barcode
+    from .barcodes import create, split_pdf_by_barcode, generate_pdf
 
 # from ..sellersinfo.models import Warehouse
 
 def splitPdf(file_name : str):
     return split_pdf_by_barcode(file_name)
+
 
 def getUserInfo(token : str):
     url = 'https://common-api.wildberries.ru/api/v1/seller-info'
@@ -44,37 +45,44 @@ def getSimple(token : str, url : str, params =  {}):
         return response.json()
 
 
-def getPstInfo(token : str):
+def getPstInfo(token: str):
     result = []
     url = 'https://marketplace-api.wildberries.ru/api/v3/supplies'
     repeadParse = True
 
-
-    # Заголовки (если нужны)
+    # Заголовки
     headers = {
-        'Content-Type': 'application/json',  # Указываем, что отправляем JSON
-        'Authorization': token # Если нужна авторизация
+        'Authorization': token  # Если нужна авторизация
     }
 
-    while repeadParse:
-    # Отправка POST-запроса
-        payload = {
-            "limit":100,
-            "next": 0
-        }
-        response = requests.post(url, data=json.dumps(payload), headers=headers)
+    next_value = 0  # Начинаем с 0, как указано в документации
 
-        for oneCard in response.json()['supplies']:
-            # print(oneCard.keys())
-            result.append(
-            oneCard
-            )
+    while repeadParse:
         payload = {
-            'next': response.json()['next'],
-            'limit':100
-            }
-        
-        if len(response.json()['supplies']) < 0:
+            "limit": 1000,  # Максимальное значение, согласно документации
+            "next": next_value
+        }
+
+        # Используем params для GET-запроса
+        response = requests.get(url, params=payload, headers=headers)
+
+        # Проверяем статус ответа
+        if response.status_code != 200:
+            print(f"Ошибка: {response.status_code}, {response.text}")
+            break
+
+        data = response.json()
+
+        # Добавляем данные в результат
+        for oneCard in data['supplies']:
+            # if not oneCard['done']:
+                result.append(oneCard)
+
+        # Обновляем значение next для следующего запроса
+        next_value = data.get('next', 0)
+
+        # Проверяем, есть ли еще данные
+        if len(data['supplies']) == 0:
             repeadParse = False
 
     return result
@@ -210,36 +218,110 @@ def getOrderStatus(token : str, ids : list):
 
     return response.json
 
+import jwt
+from datetime import datetime
+
+def decode_jwt(token):
+    try:
+        # Декодируем токен без проверки подписи
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        
+        # Расшифровка поля `s`
+        if 's' in decoded:
+            s = decoded['s']
+            categories = {
+                1: "Контент",
+                2: "Аналитика",
+                3: "Цены и скидки",
+                4: "Маркетплейс",
+                5: "Статистика",
+                6: "Продвижение",
+                7: "Вопросы и отзывы",
+                9: "Чат с покупателями",
+                10: "Поставки",
+                11: "Возвраты покупателями",
+                12: "Документы",
+                30: "Токен только на чтение"
+            }
+            # Получаем список доступных категорий
+            available_categories = [categories[bit] for bit in categories if s & (1 << bit)]
+            decoded['available_categories'] = available_categories
+        
+        # Преобразуем время жизни токена (exp) в удобный формат
+        if 'exp' in decoded:
+            exp_timestamp = decoded['exp']
+            exp_datetime = datetime.fromtimestamp(exp_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            decoded['exp_formatted'] = exp_datetime
+        
+        return decoded
+    except jwt.InvalidTokenError:
+        return "Неверный токен"
+
+import requests
+
+def get_supply_orders(supply_id, api_key):
+    """
+    Получает сборочные задания, закреплённые за поставкой.
+
+    :param supply_id: ID поставки (например, "WB-GI-1234567").
+    :param api_key: API-ключ для авторизации.
+    :return: JSON-ответ с данными или сообщение об ошибке.
+    """
+    # URL для запроса
+    url = f"https://marketplace-api.wildberries.ru/api/v3/supplies/{supply_id}/orders"
     
-def wb_con():
-
-    url = "https://01-etiketka.wbcon.su/put?email=ilnurgabdullin627@gmail.com&password=9n9BC2VA"
-
+    # Заголовки запроса
     headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Authorization": api_key,
+        "Accept": "application/json"
     }
-
-    data = {
-        "viewBarcode": True,
-        "barcode": "45896325",
-        "name": "Обувь Кроссовки",
-        "article": "4589633258",
-        "manuf_name": "",
-        "brand": "БелвестОбувь",
-        "size": "",
-        "color": "",
-        "font_size": 11,
-        "field_free": "",
-        "width": 58,
-        "height": 40
-}
-
-    response = requests.post(url, json=data, headers=headers, verify=False)
-
-    print(response.status_code)  # Выводит статус ответа
-    print(response.json())  # Выводит JSON-ответ сервера
+    
+    try:
+        # Выполняем GET-запрос
+        response = requests.get(url, headers=headers)
+        print(response.status_code)
+        # Обрабатываем ответ
+        if response.status_code == 200:
+            # Успешный запрос, возвращаем JSON-ответ
+            return response.json()
+        elif response.status_code == 409:
+            # Конфликт (например, поставка не готова к обработке)
+            return {
+                "error": "Конфликт (409): Поставка не готова к обработке.",
+                "details": response.text
+            }
+        else:
+            # Другие ошибки
+            return {
+                "error": f"Ошибка {response.status_code}",
+                "details": response.text
+            }
+    except requests.exceptions.RequestException as e:
+        # Обработка ошибок сети
+        return {
+            "error": "Ошибка сети",
+            "details": str(e)
+        }
 
 
 if __name__ == "__main__":
     pass
+# Пример использования
+    # decoded_token = decode_jwt(tk)
+    # k = getPstInfo(tk_gh)
+    # gso = get_supply_orders
+    # # print(decoded_token)
+    # data = {
+    #     'orders': [
+    #         {'scanPrice': None, 'orderUid': 'f2fc4b25e21f40cb8402b50861aba2e5', 'article': 'R134a', 'colorCode': '', 'rid': 'Da.f2fc4b25e21f40cb8402b50861aba2e5.0.0', 'createdAt': '2025-03-17T09:29:53Z', 'offices': ['Москва_Запад-Юг'], 'skus': ['2040632859018'], 'id': 3121502408, 'warehouseId': 1330747, 'nmId': 242871365, 'chrtId': 381230807, 'price': 1469000, 'convertedPrice': 8502633, 'currencyCode': 643, 'convertedCurrencyCode': 398, 'cargoType': 1, 'isZeroOrder': False, 'options': {'isB2B': False}},
+    #         # Добавьте другие заказы...
+    #     ]
+    # }
+    # shipment_id = "WB-GI-145370091"  # ID поставки
+
+    # # Генерация PDF
+    # buffer = generate_pdf(data, shipment_id)
+    # with open('pdfs/a4.pdf', 'wb') as fil:
+    #     fil.write(buffer.getvalue())
+    
+

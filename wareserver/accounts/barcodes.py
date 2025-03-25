@@ -1,10 +1,57 @@
-from reportlab.lib.pagesizes import mm
+from reportlab.lib.pagesizes import mm, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from PyPDF2 import PdfWriter, PdfReader
 from io import BytesIO
 import base64
 import os
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+
+
+from fpdf import FPDF
+
+def generate_pdf(data, shipment_id):
+    # Создаем объект PDF
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Добавляем шрифт DejaVuSans (поддерживает кириллицу)
+    pdf.add_font('DejaVuSans', '', os.path.join('DejaVuSans.ttf'), uni=True)
+    pdf.set_font('DejaVuSans', '', 8)
+
+    # Добавляем заголовок
+    pdf.cell(0, 10, f"ID поставки: {shipment_id}", ln=True, align='C')
+
+    # Создаем таблицу
+    col_widths = [20, 30, 40, 40, 30, 30]  # Ширина столбцов
+    headers = ["ID заказа", "Ячейка", "Название", "Баркод", "Артикул", "Номер стикера"]
+
+    # Заголовок таблицы
+    for i, header in enumerate(headers):
+        pdf.cell(col_widths[i], 10, header, border=1)
+    pdf.ln()
+
+    # Данные таблицы
+    for order in data['orders']:
+        pdf.cell(col_widths[0], 10, str(order['id']), border=1)
+        pdf.cell(col_widths[1], 10, "null", border=1)
+        pdf.cell(col_widths[2], 10, "Название из БД", border=1)
+        pdf.cell(col_widths[3], 10, "Баркод", border=1)
+        pdf.cell(col_widths[4], 10, order['article'], border=1)
+        pdf.cell(col_widths[5], 10, "Номер стикера", border=1)
+        pdf.ln()
+
+    # Сохраняем PDF в файл
+    pdf.output(os.path.join('pdfs','supplies', f'{shipment_id}.pdf'))
+
+
+
+
+
+
+
 
 def create(base64_list, output_pdf="output.pdf", pst_stiker=None, insert_pdf_list=None):
     page_width = 58 * mm
@@ -77,7 +124,7 @@ def create(base64_list, output_pdf="output.pdf", pst_stiker=None, insert_pdf_lis
             insert_file = insert_pdf_list[i]
             
             if insert_file is not None:
-                pdf_path = os.path.join("pdfs", insert_file)
+                pdf_path = os.path.join("wb_gi", insert_file)
                 if os.path.exists(pdf_path):
                     try:
                         insert_reader = PdfReader(pdf_path)

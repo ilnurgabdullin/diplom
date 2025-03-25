@@ -67,10 +67,8 @@ def addNewSeller(request):
         return Response({'error': 'Токен не передан'}, status=400)
 
     dt = getUserInfo(token)  # Получаем данные продавца
-    try:
-        updateWarehouses(token)
-    except:
-        pass
+    st = getSimple(token, url='https://marketplace-api.wildberries.ru/ping')
+    
 
     # Ищем продавца по sid
     seller, created = Sellers.objects.get_or_create(
@@ -89,8 +87,13 @@ def addNewSeller(request):
 
     # Проверяем, есть ли уже запись в InfoModel для этого пользователя и продавца
     user = request.user  # Получаем пользователя из запроса
+    
     info_exists = InfoModel.objects.filter(userId=user, sellerId=seller).exists()
-
+    try:
+        # print(user)
+        updateWarehouses(token, userId=CustomUser.objects.get(username=user).id)
+    except Exception as ex:
+        print('errorororoor: ',ex)
     if not info_exists:
         # Если связки пользователя с продавцом нет — создаем
         InfoModel.objects.create(userId=user, sellerId=seller)
@@ -155,8 +158,8 @@ def my_token_obtain_pair_view(request):
             refresh_token = tokens['refresh']
 
             # Настройки для кук
-            access_token_expiry = timedelta(days = 1)  # Устанавливаем время жизни для access_token (например, 15 минут)
-            refresh_token_expiry = timedelta(days=7)  # Устанавливаем время жизни для refresh_token (например, 7 дней)
+            
+           
 
             # Отправляем токены в куки
             response = Response(tokens, status=status.HTTP_200_OK)
@@ -165,7 +168,7 @@ def my_token_obtain_pair_view(request):
             response.set_cookie(
                 'access_token', 
                 access_token, 
-                max_age=access_token_expiry, 
+                max_age=3600, 
                 httponly=True,  # Защищает куки от доступа через JavaScript
                 # secure=True,    # Куки отправляются только по HTTPS
                 samesite='Strict'  # Куки отправляются только для запросов на тот же сайт
@@ -175,7 +178,7 @@ def my_token_obtain_pair_view(request):
             response.set_cookie(
                 'refresh_token', 
                 refresh_token, 
-                max_age=refresh_token_expiry, 
+                max_age=3600*24, 
                 httponly=True, 
                 # secure=True, 
                 samesite='Strict'
@@ -196,7 +199,7 @@ def user_auth_view(request):
 
 
 
-def updateWarehouses(tk):
+def updateWarehouses(tk, userId):
     cards_data = getSimple(tk,'https://marketplace-api.wildberries.ru/api/v3/warehouses')
     cards_to_create = [
             Warehouse(
@@ -204,16 +207,11 @@ def updateWarehouses(tk):
                 location_id = cr['id'],
                 office_id = cr['officeId'],
                 cargo_type = cr['cargoType'],
-                delivery_type = cr['deliveryType']
+                delivery_type = cr['deliveryType'],
+                owner_id = userId
                
             )
             for cr in cards_data
         ]
     Warehouse.objects.bulk_create(cards_to_create)
 
-
-
-
-# tk = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwMTIwdjEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc1MzkyMjYwMiwiaWQiOiIwMTk0YjIxNi02ZWNkLTc1YWUtYWVjOC0xNTM0OGMxMDY4MDciLCJpaWQiOjE5Mjg1MjYwMSwib2lkIjo0Mjg2Mjc4LCJzIjoxOCwic2lkIjoiNDhmMTNmOWYtNzdkMy00NmVjLWEyODItMTJjYjk3OTBiNDNhIiwidCI6ZmFsc2UsInVpZCI6MTkyODUyNjAxfQ.e0RizWsv1mMY3bUL4fmXb8w69SjJ1c7tp21GRVelDwURv5m6qQ2VYvKUW_UvpOoUWII-Du8V8PNtYc2eIFsAOg'
-    
-# # updateWarehouses(tk)

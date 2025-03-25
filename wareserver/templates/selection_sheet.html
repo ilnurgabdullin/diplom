@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+<!-- title -->
+{% block title %}Листы подбора{% endblock title %}
+
+
+<!-- style -->
+{% block style %}
+<style>
+    .li {
+        cursor: pointer;
+        padding: 5px;
+        border: 1px solid #ccc;
+        margin: 2px;
+    }
+</style>
+
+{% endblock style %}
+
+
+<!-- header -->
+{% block header %}
+     
+{% endblock header %}
+
+
+<!-- content -->
+{% block content%}
+
+    <div id="name"></div>
+    <button id="fetchButton">Загрузить данные</button>
+    <ul id="resultList"></ul>
+
+{% endblock content %}
+
+
+<!-- script -->
+{% block script %}
+    <script>
+        async function fetchData() {
+    const url = `/profile/fbs_supplies/{{ seller_id }}`;
+    console.log(url)
+    const resultList = document.getElementById('resultList');
+    const nameSt = document.getElementById('name');
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Ошибка при загрузке данных');
+        }
+
+        const data = await response.json();
+
+
+        resultList.innerHTML = '';
+
+        if (data.supplies.length == 0){
+            const li = document.createElement('p');
+            li.textContent = 'Нет поставок';
+            li.classList.toggle('elem');
+            resultList.appendChild(li);
+        } else 
+            data.supplies.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.name + ' ' + item.id;
+                li.dataset.name = item.name;
+                li.dataset.id = item.id;
+                li.classList.toggle('li');
+                li.dataset.barcode = item.skus; // Предполагаем, что barcode есть в данных
+                li.addEventListener('click', function () { getSelectionList(item.id);});
+                resultList.appendChild(li);
+        });
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        resultList.innerHTML = '<li>Ошибка при загрузке данных</li>';
+    }
+}
+    function getSelectionList(id){
+        alert('тут ничего нет, не тыкай больше '+id);
+    }
+    document.getElementById('fetchButton').addEventListener('click', fetchData);
+        try {
+            fetchData();
+        } catch {
+            ;
+        }
+    </script>
+{% endblock script %}
