@@ -5,9 +5,9 @@ from PyPDF2 import PdfWriter, PdfReader
 from io import BytesIO
 import base64
 import os
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+# from reportlab.lib import colors
+# from reportlab.lib.styles import getSampleStyleSheet
+# from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 
 
 from fpdf import FPDF
