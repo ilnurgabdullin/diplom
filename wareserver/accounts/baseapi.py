@@ -12,6 +12,9 @@ def splitPdf(file_name : str):
     return split_pdf_by_barcode(file_name)
 
 
+def gen_selection_list(dt, sh_id):
+    return generate_pdf(dt, sh_id)
+
 def getUserInfo(token : str):
     url = 'https://common-api.wildberries.ru/api/v1/seller-info'
     headers = {
@@ -259,7 +262,7 @@ def decode_jwt(token):
 
 import requests
 
-def get_supply_orders(supply_id, api_key):
+def get_supply_orders(api_key, supply_id):
     """
     Получает сборочные задания, закреплённые за поставкой.
 

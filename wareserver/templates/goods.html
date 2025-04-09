@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+<!-- title -->
+{% block title %}Каталог товаров{% endblock title %}
+
+<!-- style -->
+{% block style %}
+<style>
+  .accordion {
+    max-width: 1000px;
+    margin: 20px auto;
+    font-family: Arial, sans-serif;
+  }
+  
+  .accordion-item {
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+  .accordion-header {
+    padding: 15px 20px;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+  
+  .accordion-header:hover {
+    background-color: #e9e9e9;
+  }
+  
+  .accordion-header::after {
+    content: '+';
+    font-size: 20px;
+    transition: transform 0.3s;
+  }
+  
+  .accordion-item.active .accordion-header::after {
+    content: '-';
+  }
+  
+  .accordion-content {
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+  
+  .accordion-item.active .accordion-content {
+    max-height: 1000px;
+  }
+  
+  .products-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .products-table th, 
+  .products-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .products-table th {
+    background-color: #f8f8f8;
+    font-weight: bold;
+  }
+  
+  .products-table tr:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .add-product-form {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #eee;
+  }
+  
+  .add-product-form input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .add-product-form button {
+    padding: 8px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .add-product-form button:hover {
+    background-color: #45a049;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+  }
+  
+  .error {
+    text-align: center;
+    padding: 20px;
+    color: #f44336;
+  }
+</style>
+{% endblock style %}
+
+<!-- header -->
+{% block header %}
+<h1 style="text-align: center; margin: 20px 0;">Каталог товаров</h1>
+{% endblock header %}
+
+<!-- content -->
+{% block content %}
+<div class="accordion" id="goods-accordion">
+  <!-- Аккордеон будет заполняться динамически через JavaScript -->
+  <div class="loading">Загрузка данных о продавцах...</div>
+</div>
+{% endblock content %}
+
+<!-- script -->
+{% block script %}
+<script src="{% static 'goods.js' %}"></script>
+{% endblock script %}

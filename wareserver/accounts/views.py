@@ -27,35 +27,12 @@ from django.http import JsonResponse
 @authentication_classes([CookieJWTAuthentication])
 # @permission_classes([IsAuthenticated])
 def my_custom_view(request):
-    # Твоя логика здесь
-    
-    user = request.user  # Получаем данные о пользователе
+    user = request.user
     user = CustomUser.objects.get(id=user.id)
-    sellers = Sellers.objects.filter(info__userId=user)  # Получаем всех связанных продавцов
+    sellers = Sellers.objects.filter(info__userId=user)
     sls = [{'name': i.name, 'trademark': i.trademark, 'id' : i.id} for i in sellers]
     return Response({'sellers': sls}, status=200)
 
-
-@api_view(['POST'])
-@authentication_classes([CookieJWTAuthentication])
-def upload_pdf(request):
-    pdf_file = request.FILES['pdf_file']
-
-        # Проверяем, что файл является PDF
-    if not pdf_file.name.endswith('.pdf'):
-        return HttpResponse('Ошибка: разрешены только PDF-файлы.', status=400)
-
-        # Генерируем уникальное имя для файла
-    # unique_name = f"{uuid.uuid4().hex}.pdf"
-    file_path = os.path.join('pdfs', pdf_file.name)
-
-        # Сохраняем файл в папку media/pdfs/
-    default_storage.save(file_path, ContentFile(pdf_file.read()))
-
-        # Если используется модель, сохраняем информацию в базу данных
-        # PDFFile.objects.create(file=file_path)
-
-    return HttpResponse('Файл успешно загружен!')
 
 
 
@@ -67,10 +44,9 @@ def addNewSeller(request):
         return Response({'error': 'Токен не передан'}, status=400)
 
     dt = getUserInfo(token)  # Получаем данные продавца
-    st = getSimple(token, url='https://marketplace-api.wildberries.ru/ping')
+    # st = getSimple(token, url='https://marketplace-api.wildberries.ru/ping')
     
 
-    # Ищем продавца по sid
     seller, created = Sellers.objects.get_or_create(
         sid=dt['sid'],  # Проверяем по sid
         defaults={

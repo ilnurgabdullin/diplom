@@ -15,18 +15,9 @@ class InfoModel(models.Model):
 
 class Cards(models.Model):
     seller = models.ForeignKey(Sellers, to_field='sid', blank=True, null=True, on_delete=models.CASCADE)
-    nmid = models.IntegerField()
-    imtid = models.IntegerField(blank=True, null=True)
-    nmuuid = models.CharField(max_length=36, blank=True, null=True)
-    subjectid = models.IntegerField(blank=True, null=True)
+    user = models.ForeignKey(CustomUser, to_field='id', on_delete=models.CASCADE)
     subjectname = models.CharField(max_length=255, blank=True, null=True)
     vendorcode = models.CharField(max_length=255, blank=True, null=True)
-    brand = models.CharField(max_length=255, blank=True, null=True)
-    title = models.CharField(max_length=255, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    needkiz = models.BooleanField(blank=True, null=True)
-    createdat = models.DateTimeField(blank=True, null=True)
-    updatedat = models.DateTimeField(blank=True, null=True)
 
 
 class Warehouse(models.Model):

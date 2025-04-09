@@ -119,18 +119,7 @@ async function sendSelectedItems() {
             throw new Error('Ошибка при отправке данных');
         }
 
-        // Получаем ответ как Blob (бинарные данные)
-        const blob = await response.blob();
-
-        // Создаем ссылку для скачивания
-        const urlBlob = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = urlBlob;
-        // a.download = "document.pdf"; // Имя файла
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(urlBlob);
+        alert(`запрос отправлен, файл будет на старнице "листы подбора" id поставки ${response.json().data.spl_id}`)
 
     } catch (error) {
         console.error('Ошибка:', error);

@@ -13,5 +13,13 @@ urlpatterns = [
     path('create_warehouse/',create_warehouse ,name='create_warehouse'),
     path('get_my_storages/',get_my_storages ,name='get_my_storages'),
     path('get_cells/', get_cells, name='get_cells'),
-    path('create_cell/',create_cell ,name='create_cell')
+    path('goods/', goods_template, name='goods'),
+    path('add_good/', add_good, name='add_good'),
+    path('get_goods/', get_goods, name='get_goods'),
+    path('get_podbor_list/', get_podbor_list, name='get_podbor_list'),
+    path('add_product_to_cell/', add_product_to_cell, name='add_product_to_cell'),
+    path('create_cell/',create_cell ,name='create_cell'),
+    path('stikers/<path:sticker_id>/', get_stikers, name='stickers'),
+    path('supplies/<path:sticker_id>/', get_supplies, name='stickers'),
+    path('update_good/', update_good, name='update_good'),
 ]

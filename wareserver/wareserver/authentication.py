@@ -1,28 +1,28 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from django.contrib.auth import get_user_model
+from django.shortcuts import redirect
 
 class CookieJWTAuthentication(JWTAuthentication):
     def authenticate(self, request):
-        # Получаем токен из куки
         auth = request.COOKIES.get('access_token')
 
         if not auth:
-            raise AuthenticationFailed('Токен отсутствует')  # Выбрасываем исключение
+            # Если нет токена, редиректим на страницу входа
+            login_url = '/'  # Укажите ваш URL для входа
+            raise PermissionDenied(login_url)  # Можно использовать кастомное исключение
 
-        # Проверяем токен
         try:
             token = AccessToken(auth)
-            user_id = token['user_id']  # Извлекаем ID пользователя из токена
+            user_id = token['user_id']
         except Exception:
-            raise AuthenticationFailed('Недействительный токен')  # Выбрасываем исключение
+            raise AuthenticationFailed('Недействительный токен')
 
-        # Получаем пользователя по ID
         User = get_user_model()
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            raise AuthenticationFailed('Пользователь не найден')  # Выбрасываем исключение
+            raise AuthenticationFailed('Пользователь не найден')
 
-        return user, token  # Возвращаем пользователя и токен
+        return user, token
