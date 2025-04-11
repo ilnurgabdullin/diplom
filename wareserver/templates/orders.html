@@ -115,9 +115,6 @@ async function sendSelectedItems() {
             }) // Отправляем массив объектов {id, barcode}
         });
 
-        if (!response.ok) {
-            throw new Error('Ошибка при отправке данных');
-        }
 
         alert(`запрос отправлен, файл будет на старнице "листы подбора" id поставки ${response.json().data.spl_id}`)
 

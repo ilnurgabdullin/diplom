@@ -248,6 +248,7 @@ def update_good(request):
     print(number)
     return Response({'status': number}, status=200)
 
+
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
 def create_cell(request):
@@ -362,7 +363,7 @@ def send_stikers(request):
         for i in data['items']:
             addOrderInPostavk(slr.api_token,pst,i['id'])
             sleep(0.5)
-
+        sleep(5)
         addPst2Del(slr.api_token, pst)
         return Response({'spl_id': pst}, status=200)
     else:

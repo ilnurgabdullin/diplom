@@ -1,20 +1,3 @@
-
-    // Вспомогательная функция для получения CSRF токена
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
 async function fetchStorage() {
         try {
             let response = await fetch('/profile/get_my_storages', {
@@ -151,160 +134,183 @@ async function fetchStorage() {
         }
     }
 
-async function fillFirstAccordion(container, storage) {
-    if (!container) return;
-    let response = await fetch(`/profile/get_cells/?wrh=${storage.id}`, {
-            method: 'GET',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include' 
-        });
+    async function fillFirstAccordion(container, storage) {
+        if (!container) return;
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        let data = await response.json();
-
-    container.innerHTML = '';
-    console.log(data);
-    let infoData = []
-    data.cells.forEach((item) => {
-        infoData.push({username: item.cell_code, content: item.description, cell_id: item.id});
-    });
-
-    // Загружаем список товаров для выпадающего списка
-    let products = await fetchProducts();
-    
-    infoData.forEach(item => {
-        const itemHtml = `
-            <div class="d-flex text-body-secondary pt-3">
-                <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32" 
-                    xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: 32x32" 
-                    preserveAspectRatio="xMidYMid slice" focusable="false">
-                    <title>${item.username}</title>
-                    <rect width="100%" height="100%" fill="#${Array.from(item.username).reduce((hash, char) => {
-                        const updated = (hash << 5) - hash + char.charCodeAt(0);
-                        return updated & updated;
-                    }, 5381).toString(16).padStart(6, '0').slice(-6)}"></rect>
-                    <text x="40%" y="50%" fill="#ffffff" dy=".3em" font-size="12">${item.username.substring(0, 1)}</text>
-                </svg>
-                <div class="pb-3 mb-0 small lh-sm border-bottom w-100 d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong class="d-block text-gray-dark">${item.username}</strong>
-                        ${item.content}
-                    </div>
-                    <div class="cell-actions">
-                        <button class="btn btn-sm btn-outline-primary add-product-btn" type="button" 
-                            data-bs-toggle="modal" data-bs-target="#addProductModal"
-                            data-cell-id="${item.cell_id}" 
-                            data-storage-id="${storage.id}">
-                            Добавить товар
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', itemHtml);
-    });
-
-    // Создаем модальное окно для добавления товара
-    const modalHtml = `
-        <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addProductModalLabel">Добавить товар в ячейку</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addProductForm">
-                            <input type="hidden" id="modalCellId" name="cell_id">
-                            <input type="hidden" id="modalStorageId" name="storage_id">
-                            <div class="mb-3">
-                                <label for="productSelect" class="form-label">Выберите товар</label>
-                                <select class="form-select" id="productSelect" required>
-                                    <option value="" selected disabled>Выберите товар</option>
-                                    ${products.map(product => `
-                                        <option value="${product.barcode}">${product.name}</option>
-                                    `).join('')}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="productQuantity" class="form-label">Количество</label>
-                                <input type="number" class="form-control" id="productQuantity" value="1" min="1" required>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <button type="button" class="btn btn-primary" id="submitAddProduct">Добавить</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    // Обработчик открытия модального окна
-    document.querySelectorAll('.add-product-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.getElementById('modalCellId').value = this.getAttribute('data-cell-id');
-            document.getElementById('modalStorageId').value = this.getAttribute('data-storage-id');
-        });
-    });
-
-    // Обработчик отправки формы
-    document.getElementById('submitAddProduct').addEventListener('click', async function() {
-        const cellId = document.getElementById('modalCellId').value;
-        const storageId = document.getElementById('modalStorageId').value;
-        const barcode = document.getElementById('productSelect').value;
-        const quantity = document.getElementById('productQuantity').value;
-        
-        if (!barcode) {
-            alert('Пожалуйста, выберите товар');
-            return;
-        }
-
         try {
-            const response = await fetch('/profile/add_product_to_cell/', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    wrh_id: storageId,
-                    cell_id: cellId,
-                    barcode: barcode,
-                    quantity: quantity
-                })
+            let response = await fetch(`/profile/get_cells/?wrh=${storage.id}`, {
+                method: 'GET',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include' 
             });
-
+            
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Неизвестная ошибка');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            const data = await response.json();
-            alert(`Товар успешно добавлен в ячейку! Количество: ${quantity}`);
             
-            // Закрываем модальное окно
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
-            modal.hide();
+            let cellsData = await response.json();
+            container.innerHTML = '';
             
-            // Очищаем форму
-            document.getElementById('productSelect').value = '';
-            document.getElementById('productQuantity').value = '1';
+            // Загружаем список всех товаров для выпадающего списка
+            let allProducts = await fetchProducts();
+            
+            cellsData.cells.forEach(cell => {
+                const productsHtml = cell.products.length > 0 
+                    ? `<div class="mt-3">
+                          <h6 class="text-muted small">Товары в ячейке:</h6>
+                          <div class="list-group list-group-flush">
+                              ${cell.products.map(product => `
+                                  <div class="list-group-item py-2">
+                                      <div class="d-flex justify-content-between align-items-center">
+                                          <div>
+                                              <strong>${product.name}</strong>
+                                              <div class="text-muted small">Арт: ${product.article}</div>
+                                          </div>
+                                          <div>
+                                              <span class="badge bg-primary rounded-pill">${product.quantity} шт.</span>
+                                          </div>
+                                      </div>
+                                  </div>
+                              `).join('')}
+                          </div>
+                       </div>`
+                    : '<div class="text-muted mt-2 small">В ячейке нет товаров</div>';
+    
+                const itemHtml = `
+                    <div class="d-flex text-body-secondary pt-3">
+                        <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32" 
+                            xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: 32x32" 
+                            preserveAspectRatio="xMidYMid slice" focusable="false">
+                            <title>${cell.cell_code}</title>
+                            <rect width="100%" height="100%" fill="#${Array.from(cell.cell_code).reduce((hash, char) => {
+                                const updated = (hash << 5) - hash + char.charCodeAt(0);
+                                return updated & updated;
+                            }, 5381).toString(16).padStart(6, '0').slice(-6)}"></rect>
+                            <text x="40%" y="50%" fill="#ffffff" dy=".3em" font-size="12">${cell.cell_code.substring(0, 1)}</text>
+                        </svg>
+                        <div class="pb-3 mb-0 small lh-sm border-bottom w-100">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="d-block text-gray-dark">${cell.cell_code}</strong>
+                                    ${cell.description || ''}
+                                </div>
+                                <div class="cell-actions">
+                                    <button class="btn btn-sm btn-outline-primary add-product-btn" type="button" 
+                                        data-bs-toggle="modal" data-bs-target="#addProductModal"
+                                        data-cell-id="${cell.id}" 
+                                        data-storage-id="${storage.id}">
+                                        Добавить товар
+                                    </button>
+                                </div>
+                            </div>
+                            ${productsHtml}
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', itemHtml);
+            });
+    
+            // Создаем модальное окно для добавления товара (если ещё не создано)
+            if (!document.getElementById('addProductModal')) {
+                const modalHtml = `
+                    <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addProductModalLabel">Добавить товар в ячейку</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="addProductForm">
+                                        <input type="hidden" id="modalCellId" name="cell_id">
+                                        <input type="hidden" id="modalStorageId" name="storage_id">
+                                        <div class="mb-3">
+                                            <label for="productSelect" class="form-label">Выберите товар</label>
+                                            <select class="form-select" id="productSelect" required>
+                                                <option value="" selected disabled>Выберите товар</option>
+                                                ${allProducts.map(product => `
+                                                    <option value="${product.barcode}">${product.name}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="productQuantity" class="form-label">Количество</label>
+                                            <input type="number" class="form-control" id="productQuantity" value="1" min="1" required>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                    <button type="button" class="btn btn-primary" id="submitAddProduct">Добавить</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+                // Обработчики для модального окна
+                document.querySelectorAll('.add-product-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.getElementById('modalCellId').value = this.getAttribute('data-cell-id');
+                        document.getElementById('modalStorageId').value = this.getAttribute('data-storage-id');
+                    });
+                });
+    
+                document.getElementById('submitAddProduct').addEventListener('click', async function() {
+                    const cellId = document.getElementById('modalCellId').value;
+                    const storageId = document.getElementById('modalStorageId').value;
+                    const barcode = document.getElementById('productSelect').value;
+                    const quantity = document.getElementById('productQuantity').value;
+                    
+                    if (!barcode) {
+                        alert('Пожалуйста, выберите товар');
+                        return;
+                    }
+    
+                    try {
+                        const response = await fetch('/profile/add_product_to_cell/', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: {
+                                // 'X-CSRFToken': getCookie('csrftoken'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                wrh_id: storageId,
+                                cell_id: cellId,
+                                barcode: barcode,
+                                quantity: quantity
+                            })
+                        });
+    
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || 'Неизвестная ошибка');
+                        }
+    
+                        const data = await response.json();
+                        alert(`Товар успешно добавлен в ячейку!`);
+                        
+                        // Закрываем модальное окно и обновляем данные
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+                        modal.hide();
+                        fetchStorage(); // Обновляем весь список
+                        
+                    } catch (error) {
+                        console.error('Ошибка:', error);
+                        alert(`Ошибка: ${error.message}`);
+                    }
+                });
+            }
             
         } catch (error) {
-            console.error('Ошибка:', error);
-            alert(`Ошибка: ${error.message}`);
+            console.error("Ошибка загрузки данных ячеек:", error);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    Ошибка загрузки данных ячеек. Пожалуйста, попробуйте позже.
+                </div>`;
         }
-    });
-}
+    }
 
     
 async function fetchProducts() {
@@ -355,7 +361,7 @@ function setupFormHandlers(container, storageId) {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
-                            'X-CSRFToken': getCookie('csrftoken'),
+                            // 'X-CSRFToken': getCookie('csrftoken'),
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
                         },
