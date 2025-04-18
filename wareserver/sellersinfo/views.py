@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.shortcuts import render
 from wareserver.authentication import CookieJWTAuthentication
 from rest_framework.decorators import api_view, authentication_classes
-from accounts.baseapi import getStiker, getFBSorders, createPostavks, addOrderInPostavk, getPSTStiker, addPst2Del, getUserInfo, get_supply_orders, getPstInfo
+from accounts.baseapi import *
 from accounts.barcodes import create, generate_pdf
 from datetime import date
 from time import sleep
@@ -178,6 +178,18 @@ def create_warehouse(request):
 
     # Возвращаем успешный ответ
     return Response({'status': 'success', 'id': st.id}, status=201)
+
+
+@api_view(['POST'])
+@authentication_classes([CookieJWTAuthentication])
+def editSettings(request):
+    data = request.data
+
+    print(data)
+    
+    # Возвращаем успешный ответ
+    return Response({'status': 'success'}, status=201)
+
 
 
 from django.shortcuts import get_object_or_404
@@ -373,21 +385,38 @@ def send_stikers(request):
 
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
+def chek_token(request):
+    data = request.data
+    if len(data) > 0:
+        print(data)
+        dk_jw = decode_jwt(data.get('token'))
+        usIn = getUserInfo(data.get('token'))
+        dk_jw['name'] = usIn['name']
+        dk_jw['tradeMark'] = usIn['tradeMark']
+        print(dk_jw)
+        return Response({'token_status': dk_jw}, status=200)
+    else:
+        return Response({'sellers': 'empty'}, status=200)
+
+
+
+@api_view(['POST'])
+@authentication_classes([CookieJWTAuthentication])
 def get_podbor_list(request):
     data = request.data
     pst = data.get('supply',False)
     if pst:
-        stiker_file = os.path.join("pdfs","stikers",pst)+'.pdf'
-        sheet_file = os.path.join("pdfs","supplies",pst)+'.pdf'
-        print(stiker_file, sheet_file)
-        print(os.path.isfile(stiker_file), os.path.isfile(sheet_file))
-    else:
-        return Response({'sellers': 'empty'}, status=200)
+    #     stiker_file = os.path.join("pdfs","stikers",pst)+'.pdf'
+    #     sheet_file = os.path.join("pdfs","supplies",pst)+'.pdf'
+    #     print(stiker_file, sheet_file)
+    #     print(os.path.isfile(stiker_file), os.path.isfile(sheet_file))
+    # else:
+    #     return Response({'sellers': 'empty'}, status=200)
     
-    if os.path.isfile(stiker_file) and os.path.isfile(sheet_file):
-        print('файлы уже есть')
-        return Response({'sellers': 'ok'}, status=200)
-    else:
+    # if os.path.isfile(stiker_file) and os.path.isfile(sheet_file):
+    #     print('файлы уже есть')
+    #     return Response({'sellers': 'ok'}, status=200)
+    # else:
         slr = Sellers.objects.get(id = data['seller'])
         slr_tk = slr.api_token
         slr_name = slr.name
@@ -428,6 +457,20 @@ def get_podbor_list(request):
         print(data_for_list)
         print(generate_pdf(data_for_list, pst+'#'+slr_name))
         return Response({'sellers': 'empty'}, status=200)
+
+
+@api_view(['DELETE'])
+@authentication_classes([CookieJWTAuthentication])
+def delete_storage_cell(request, cell_id):
+    try:
+        cell = StorageCell.objects.get(id=cell_id)
+        cell.delete()
+        return Response({'status': 'success', 'message': f'Ячейка {cell_id} удалена'}, status=200)
+    except StorageCell.DoesNotExist:
+        return Response({'status': 'error', 'message': 'Ячейка не найдена'}, status=404)
+    except Exception as e:
+        return Response({'status': 'error', 'message': str(e)}, status=500)
+
 
 
 from django.http import FileResponse

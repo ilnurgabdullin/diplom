@@ -195,6 +195,12 @@ async function fetchStorage() {
                                     ${cell.description || ''}
                                 </div>
                                 <div class="cell-actions">
+                                    <button type="button"  
+                                        class="delete-cell-btn"
+                                        data-cell-id="${cell.id}" 
+                                        data-storage-id="${storage.id}">
+                                        Удалить ячейку
+                                    </button>
                                     <button class="btn btn-sm btn-outline-primary add-product-btn" type="button" 
                                         data-bs-toggle="modal" data-bs-target="#addProductModal"
                                         data-cell-id="${cell.id}" 
@@ -252,6 +258,29 @@ async function fetchStorage() {
                     btn.addEventListener('click', function() {
                         document.getElementById('modalCellId').value = this.getAttribute('data-cell-id');
                         document.getElementById('modalStorageId').value = this.getAttribute('data-storage-id');
+                    });
+                });
+                document.querySelectorAll('.delete-cell-btn').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        try {
+                            const response = await fetch(`/profile/delete/${this.getAttribute('data-cell-id')}/`, {
+                              method: 'DELETE',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                            });
+                        
+                            if (!response.ok) {
+                              throw new Error('Ошибка при удалении');
+                            }
+                        
+                            const data = await response.json();
+                            console.log('Успешно удалено:', data);
+                            return data;
+                          } catch (error) {
+                            console.error('Ошибка:', error);
+                            throw error;
+                          }
                     });
                 });
     

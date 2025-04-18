@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import CustomUser
+ 
 
 class Sellers(models.Model):
     name = models.CharField(max_length=255)
@@ -12,6 +13,10 @@ class InfoModel(models.Model):
     userId = models.ForeignKey(CustomUser, to_field='id', on_delete=models.CASCADE, related_name='info')  # Связь один-ко-многим
     sellerId = models.ForeignKey(Sellers, to_field='sid', on_delete=models.CASCADE, related_name='info')  # Один пользователь - много продавцов
 
+
+class UserSetting(models.Model):
+    userId = models.ForeignKey(CustomUser, to_field='id', on_delete=models.CASCADE)
+    barcodes = models.BooleanField(verbose_name="Надо ли печатать баркод", default= True)
 
 class Cards(models.Model):
     seller = models.ForeignKey(Sellers, to_field='sid', blank=True, null=True, on_delete=models.CASCADE)

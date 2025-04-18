@@ -1,6 +1,6 @@
 const pathSegments = window.location.pathname.split('/').filter(Boolean);
 const selectionId = pathSegments[pathSegments.length - 1];
-async function fetchData() {
+async function fetchData(n) {
     const url = `/profile/fbs_supplies/${selectionId}`;
     console.log(url)
     const resultList = document.getElementById('resultList');
@@ -21,7 +21,13 @@ async function fetchData() {
             li.classList.toggle('elem');
             resultList.appendChild(li);
         } else {
-            data.supplies.forEach(item => {
+            if (n != 0){
+                d = data.supplies.slice(0, n)
+            } else {
+                console.log('нет N')
+                d = data.supplies
+            }
+            d.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'list-item';
                 
@@ -89,9 +95,9 @@ async function fetchData() {
         
         return data;
     }
-    document.getElementById('fetchButton').addEventListener('click', fetchData);
+    document.getElementById('fetchButton').addEventListener('click', ()=>fetchData(0));
         try {
-            fetchData();
+            fetchData(10);
         } catch {
             ;
         }

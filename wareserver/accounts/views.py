@@ -66,7 +66,6 @@ def addNewSeller(request):
     
     info_exists = InfoModel.objects.filter(userId=user, sellerId=seller).exists()
     try:
-        # print(user)
         updateWarehouses(token, userId=CustomUser.objects.get(username=user).id)
     except Exception as ex:
         print('errorororoor: ',ex)

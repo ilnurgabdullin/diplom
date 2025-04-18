@@ -232,23 +232,11 @@ def decode_jwt(token):
         # Расшифровка поля `s`
         if 's' in decoded:
             s = decoded['s']
-            categories = {
-                1: "Контент",
-                2: "Аналитика",
-                3: "Цены и скидки",
-                4: "Маркетплейс",
-                5: "Статистика",
-                6: "Продвижение",
-                7: "Вопросы и отзывы",
-                9: "Чат с покупателями",
-                10: "Поставки",
-                11: "Возвраты покупателями",
-                12: "Документы",
-                30: "Токен только на чтение"
-            }
-            # Получаем список доступных категорий
-            available_categories = [categories[bit] for bit in categories if s & (1 << bit)]
-            decoded['available_categories'] = available_categories
+            # print(s & (1 << 3))
+            if (s & (1 << 4) and not (s & (1 << 30))):
+                decoded['available_categories'] = True
+            else:
+                decoded['available_categories'] = False
         
         # Преобразуем время жизни токена (exp) в удобный формат
         if 'exp' in decoded:
@@ -258,7 +246,7 @@ def decode_jwt(token):
         
         return decoded
     except jwt.InvalidTokenError:
-        return "Неверный токен"
+        return "er"
 
 import requests
 

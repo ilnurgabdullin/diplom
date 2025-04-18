@@ -22,4 +22,7 @@ urlpatterns = [
     path('stikers/<path:sticker_id>/', get_stikers, name='stickers'),
     path('supplies/<path:sticker_id>/', get_supplies, name='stickers'),
     path('update_good/', update_good, name='update_good'),
+    path('chek_token/', chek_token, name='chek_token'),
+    path('editSettings/', editSettings, name='editSettings'),
+    path('delete/<int:cell_id>/', delete_storage_cell, name='delete_storage_cell')
 ]
