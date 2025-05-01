@@ -51,8 +51,8 @@ async function fetchData(n) {
                             
                             const loadMess = document.getElementById(`${item.id}-message`);
                             loadMess.innerHTML =`
-                            <div><a class="extra-text" target="_blank" href="/profile/stikers/${item.id}">/profile/stikers/${item.id}</a></div>
-                            <div><a class="extra-text" target="_blank" href="/profile/supplies/${item.id}">/profile/supplies/${item.id}</a></div>`
+                            <div><a class="extra-text" target="_blank" href="/profile/stikers/${item.id}">Стикеры поставки</a></div>
+                            <div><a class="extra-text" target="_blank" href="/profile/supplies/${item.id}">Лист подбора</a></div>`
                             // После успешной загрузки скрываем сообщение о загрузке
                             // loadingMessage.style.display = 'none';
                             

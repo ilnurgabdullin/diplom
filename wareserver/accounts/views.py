@@ -23,6 +23,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.http import JsonResponse
 
+
 @api_view(['GET'])
 @authentication_classes([CookieJWTAuthentication])
 # @permission_classes([IsAuthenticated])

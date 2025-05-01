@@ -26,3 +26,5 @@ urlpatterns = [
     path('editSettings/', editSettings, name='editSettings'),
     path('delete/<int:cell_id>/', delete_storage_cell, name='delete_storage_cell')
 ]
+
+

@@ -1,13 +1,13 @@
 from rest_framework.response import Response
 from rest_framework.response import Response
-from sellersinfo.models import Sellers, Cards, InfoModel, Warehouse, Storage, StorageCell, ProductPlacement
+from sellersinfo.models import Sellers, Cards, InfoModel, Warehouse, Storage, StorageCell, ProductPlacement, UserSetting
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import render
 from wareserver.authentication import CookieJWTAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from accounts.baseapi import *
-from accounts.barcodes import create, generate_pdf
+from accounts.barcodes import create
 from datetime import date
 from time import sleep
 import logging
@@ -23,13 +23,9 @@ import os
 def get_cells(request):
     try:
         warehouse_id = request.GET.get('wrh')
-        if not warehouse_id:
-            return JsonResponse({'error': 'Не указан ID склада'}, status=400)
-        
         cells = StorageCell.objects.filter(warehouse_id=warehouse_id).prefetch_related(
             'placements__product'
         )
-        
         cells_data = []
         for cell in cells:
             products = []
@@ -183,12 +179,20 @@ def create_warehouse(request):
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
 def editSettings(request):
-    data = request.data
-
-    print(data)
+    data = request.data.get('barc','-')
+    settings = UserSetting.objects.get(userId = request.user)
+    cur_set = settings.barcodes
+    rsp = 'Не обновили настройки'
+    if data =='y' and cur_set == False:
+        settings.barcodes = True
+        rsp = 'Теперь будут добавлены штрих коды товара в стикеры'
+    elif data == 'n' and cur_set:
+        settings.barcodes = False
+        rsp = 'Штрих коды товара будут удалены из стикеров'
     
-    # Возвращаем успешный ответ
-    return Response({'status': 'success'}, status=201)
+    settings.save()
+
+    return Response({'status': rsp}, status=201)
 
 
 
@@ -245,9 +249,9 @@ def create_product(user_id,name, seller_id, vendorcode=None):
 )
     if not created:
         raise ValidationError('Ошибка')
-    product.save()
-    
+    product.save()   
     return product
+
 
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
@@ -406,21 +410,15 @@ def get_podbor_list(request):
     data = request.data
     pst = data.get('supply',False)
     if pst:
-    #     stiker_file = os.path.join("pdfs","stikers",pst)+'.pdf'
-    #     sheet_file = os.path.join("pdfs","supplies",pst)+'.pdf'
-    #     print(stiker_file, sheet_file)
-    #     print(os.path.isfile(stiker_file), os.path.isfile(sheet_file))
-    # else:
-    #     return Response({'sellers': 'empty'}, status=200)
-    
-    # if os.path.isfile(stiker_file) and os.path.isfile(sheet_file):
-    #     print('файлы уже есть')
-    #     return Response({'sellers': 'ok'}, status=200)
-    # else:
         slr = Sellers.objects.get(id = data['seller'])
         slr_tk = slr.api_token
         slr_name = slr.name
-        
+        setting, created = UserSetting.objects.get_or_create(
+            userId = request.user, 
+            defaults = {
+            'barcodes' : True
+            }
+        )   
         ords = get_supply_orders(slr_tk, pst)
         ids = []
         barcs_list = []
@@ -433,18 +431,21 @@ def get_podbor_list(request):
             sticks = []
 
         barcs = get_products_with_placements(set(barcs_list))
-        stiks = []
+        stiks = {}
         sleep(2)
-        for i in sticks:
-            stiks.append(i.get('file',''))
         pst_code = getPSTStiker(slr.api_token, pst)
-        print(len(barcs_list), len(sticks))
-        create(stiks, output_pdf=f'pdfs/stikers/{pst}.pdf',pst_stiker= pst_code, insert_pdf_list=barcs_list)
+        print('текущие настройки: ',setting.barcodes)
+        create(stiks, output_pdf=f'pdfs/stikers/{pst}.pdf',pst_stiker= pst_code, insert_pdf_list=barcs_list, setting = {'barcodes':setting.barcodes})
         data_for_list = []
+        def srch(l : list, s : int) -> dict:
+            for i in l:
+                if i.get('orderId',0) == s:
+                    return i
+            return {}
         print(barcs)
-        for ord, stik in zip(ords['orders'],sticks):
+        for ord in ords['orders']:
             k = ord.get('skus',['null'])[0]
-            # print(k,barcs.get(k))
+            stik = srch(sticks, ord.get('id','null'))
             data_for_list.append(
                 {
                     'id':ord.get('id','null'),
@@ -454,8 +455,10 @@ def get_podbor_list(request):
                     'stik':stik['partA']+stik['partB']
                 }
             )
-        print(data_for_list)
-        print(generate_pdf(data_for_list, pst+'#'+slr_name))
+        try:
+            print(generate_pdf(data_for_list, shipment_id=pst+'#'+slr_name))
+        except Exception as ex:
+            print(ex)
         return Response({'sellers': 'empty'}, status=200)
 
 
@@ -480,8 +483,8 @@ import os
 @authentication_classes([CookieJWTAuthentication])
 def get_stikers(request, sticker_id):
     print(sticker_id)
-    if os.path.join("pdfs","stikers",sticker_id)+'.pdf':
-        filepath = os.path.join('pdfs','stikers',sticker_id) + '.pdf'
+    filepath = os.path.join('pdfs','stikers',sticker_id) + '.pdf'
+    if filepath:
         return FileResponse(open(filepath, 'rb'), content_type='application/pdf')
     else:
         return Response({'sellers': 'empty'}, status=200)
@@ -492,8 +495,8 @@ def get_stikers(request, sticker_id):
 @authentication_classes([CookieJWTAuthentication])
 def get_supplies(request, sticker_id):
     print(sticker_id)
-    if os.path.join("pdfs","supplies",sticker_id)+'.pdf':
-        filepath = os.path.join('pdfs','supplies',sticker_id) + '.pdf'
+    filepath = os.path.join('pdfs','supplies',sticker_id) + '.pdf'
+    if filepath:
         return FileResponse(open(filepath, 'rb'), content_type='application/pdf')
     else:
         filepath = os.path.join('pdfs','supplies',sticker_id) + '.pdf'

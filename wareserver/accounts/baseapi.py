@@ -18,17 +18,13 @@ def gen_selection_list(dt, sh_id):
 def getUserInfo(token : str):
     url = 'https://common-api.wildberries.ru/api/v1/seller-info'
     headers = {
-    'Authorization': token,  # Замените YOUR_ACCESS_TOKEN на ваш токен
-    'Content-Type': 'application/json'  # Пример другого заголовка
+    'Authorization': token, 
+    'Content-Type': 'application/json'
     }
     response = requests.get(url,headers=headers)
 
-    if response.status_code == 200:
-        print('Успешный запрос!')
-        return response.json()  # Если ответ в формате JSON
-    else:
-        print('Ошибка:', response.status_code)
-        return response.text
+    return response.json() 
+    
 
 
 def getSimple(token : str, url : str, params =  {}):
@@ -108,32 +104,28 @@ def getFBSorders(token : str):
         return response.text
 
 
-def getStiker(token : str, ords : list):
+def getStiker(token : str, ords : list) -> list:
     url = 'https://marketplace-api.wildberries.ru/api/v3/orders/stickers'
 
 
-    # Заголовки (если нужны)
     headers = {
-        'Content-Type': 'application/json',  # Указываем, что отправляем JSON
-        'Authorization': token # Если нужна авторизация
+        'Content-Type': 'application/json',
+        'Authorization': token 
     }
 
     params = {
-    "type": "png",  # Тип стикера (svg, zplv, zplh, png)
-    "width": 58,    # Ширина стикера (58 или 40)
-    "height": 40    # Высота стикера (40 или 30)
+    "type": "png", 
+    "width": 58, 
+    "height": 40    
     }
     
-    # Отправка POST-запроса
     payload = {
         "orders": ords
     }
-    # print(ords)
 
     response = requests.post(url, data=json.dumps(payload), headers=headers, params=params)
-    # print(response.json())
 
-    return response.json()['stickers']
+    return response.json().get('stickers')
 
 
 def getPSTStiker(token : str, pst : str):
@@ -152,7 +144,7 @@ def getPSTStiker(token : str, pst : str):
         return response.json()['file']
     else:
         # В случае ошибки возвращаем None и выводим статус код
-        print(f"Ошибка: {response.status_code}")
+        print(f"Ошибка: {response.text}")
         return None
 
 
@@ -297,6 +289,7 @@ def get_supply_orders(api_key, supply_id):
 
 if __name__ == "__main__":
     pass
+    tk = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwNDE3djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc2MTY3OTQ3MCwiaWQiOiIwMTk2ODA2ZS1kYThlLTdjNDEtYTNjNC1kMGY0Y2MwOTg1NTIiLCJpaWQiOjgxODUzMDA0LCJvaWQiOjgxNzE1NSwicyI6MjYsInNpZCI6ImQxNjg3MTQ2LTFmZGQtNGMzMC05MjIwLWZmNjJlMzBkMzZiYyIsInQiOmZhbHNlLCJ1aWQiOjgxODUzMDA0fQ.1Pl81RCzdaagCj4bSDveOGmO82m_dpIrPoBgzLbvEUdH4DeGPkYeYUFdghP83iT9qMMrsImqItG1UtmPOB_sYg'
 # Пример использования
     
     # k = getPstInfo(tk_gh)

@@ -9,10 +9,8 @@ class CookieJWTAuthentication(JWTAuthentication):
         auth = request.COOKIES.get('access_token')
 
         if not auth:
-            # Если нет токена, редиректим на страницу входа
-            login_url = '/'  # Укажите ваш URL для входа
-            raise PermissionDenied(login_url)  # Можно использовать кастомное исключение
-
+            login_url = '/' 
+            raise PermissionDenied(login_url) 
         try:
             token = AccessToken(auth)
             user_id = token['user_id']
@@ -26,3 +24,7 @@ class CookieJWTAuthentication(JWTAuthentication):
             raise AuthenticationFailed('Пользователь не найден')
 
         return user, token
+
+
+
+

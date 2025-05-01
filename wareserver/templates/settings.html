@@ -41,6 +41,7 @@
             <div class="form-group">
                 <label for="name">Выводить баркоды:</label>
                 <select id="barcs" name="barcs">
+                      <option value="-">--</option>
                       <option value="y">Да</option>
                       <option value="n">Нет</option>
                   </select>
@@ -224,9 +225,12 @@
 
                 if (!response.ok) {
                     throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+                } else {
+                    const result = await response.json();
+                    confirm(result.status);
                 }
             } catch (error) {
-                console.error('Ошибка при отправке токена:', error); 
+                console.error('Ошибка при отправке настроек:', error); 
             }
         }
 

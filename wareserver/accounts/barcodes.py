@@ -17,7 +17,8 @@ def generate_pdf(data, shipment_id : str):
     # Создаем объект PDF
     pdf = FPDF()
     pdf.add_page()
-
+    print(data)
+    
     # Добавляем шрифт DejaVuSans (поддерживает кириллицу)
     pdf.add_font('DejaVuSans', '', os.path.join('DejaVuSans.ttf'), uni=True)
     pdf.add_font('DejaVuSans', 'B', os.path.join('DejaVuSans-Bold.ttf'), uni=True)  # Добавляем жирный шрифт
@@ -109,11 +110,12 @@ def generate_pdf(data, shipment_id : str):
             pdf.ln()
 
     # Сохраняем PDF в файл
+    print("Создан лист подбора",sh_id)
     pdf.output(os.path.join('pdfs','supplies', f'{sh_id}.pdf'))
     return sh_id
 
 
-def create(base64_list, output_pdf="output.pdf", pst_stiker=None, insert_pdf_list=None):
+def create(base64_list, output_pdf="output.pdf", pst_stiker=None, insert_pdf_list=None, setting = {'barcodes' : True}):
     writer = PdfWriter()
     def create_error_page(message):
         packet = BytesIO()
@@ -189,11 +191,11 @@ def create(base64_list, output_pdf="output.pdf", pst_stiker=None, insert_pdf_lis
         raise ValueError("Длина insert_pdf_list должна совпадать с base64_list")
 
     # Добавляем страницы стикеров и вставок
+  
     for i, page in enumerate(input_pdf.pages):
         writer.add_page(page)
-        if i < len(insert_pdf_list):  # Проверка на выход за пределы списка
-            insert_file = insert_pdf_list[i] + '.pdf'
-            
+        if i < len(insert_pdf_list) and setting.get('barcodes'):  # Проверка на выход за пределы списка
+            insert_file = insert_pdf_list[i] + '.pdf' 
             if insert_file is not None:
                 pdf_path = os.path.join('pdfs',insert_file)
                 print('ищу pdf:',pdf_path)
