@@ -431,7 +431,7 @@ def get_podbor_list(request):
             sticks = []
 
         barcs = get_products_with_placements(set(barcs_list))
-        stiks = {}
+        stiks = []
         sleep(2)
         pst_code = getPSTStiker(slr.api_token, pst)
         print('текущие настройки: ',setting.barcodes)
@@ -446,6 +446,7 @@ def get_podbor_list(request):
         for ord in ords['orders']:
             k = ord.get('skus',['null'])[0]
             stik = srch(sticks, ord.get('id','null'))
+            stiks.append(stik['file'])
             data_for_list.append(
                 {
                     'id':ord.get('id','null'),
@@ -455,6 +456,7 @@ def get_podbor_list(request):
                     'stik':stik['partA']+stik['partB']
                 }
             )
+        create(stiks, output_pdf=f'pdfs/stikers/{pst}.pdf',pst_stiker= pst_code, insert_pdf_list=barcs_list, setting = {'barcodes':setting.barcodes})
         try:
             print(generate_pdf(data_for_list, shipment_id=pst+'#'+slr_name))
         except Exception as ex:
