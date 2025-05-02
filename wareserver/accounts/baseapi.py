@@ -289,9 +289,6 @@ def get_supply_orders(api_key, supply_id):
 
 if __name__ == "__main__":
     pass
-    tk = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwNDE3djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc2MTY3OTQ3MCwiaWQiOiIwMTk2ODA2ZS1kYThlLTdjNDEtYTNjNC1kMGY0Y2MwOTg1NTIiLCJpaWQiOjgxODUzMDA0LCJvaWQiOjgxNzE1NSwicyI6MjYsInNpZCI6ImQxNjg3MTQ2LTFmZGQtNGMzMC05MjIwLWZmNjJlMzBkMzZiYyIsInQiOmZhbHNlLCJ1aWQiOjgxODUzMDA0fQ.1Pl81RCzdaagCj4bSDveOGmO82m_dpIrPoBgzLbvEUdH4DeGPkYeYUFdghP83iT9qMMrsImqItG1UtmPOB_sYg'
-# Пример использования
-    
     # k = getPstInfo(tk_gh)
     # gso = get_supply_orders
     # # print(decoded_token)
